@@ -1,0 +1,6 @@
+# Core dependencies for the foundation. CPU-only compatible.
+# PyTorch is intentionally not listed here; see README.md for the optional
+# installation command once model work begins.
+PyYAML>=6.0,<7
+numpy>=1.24,<3
+Pillow>=10.0

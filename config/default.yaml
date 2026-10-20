@@ -1,0 +1,30 @@
+# Default configuration for the foundation phase.
+# Relative paths are resolved against the repository root, not the current
+# working directory. Absolute paths are used as-is.
+project:
+  name: planetary-plume-ai
+  random_seed: 42
+
+paths:
+  data_dir: data
+  outputs_dir: outputs
+
+dataset:
+  # Optional path to a candidate dataset. null means "use paths.data_dir".
+  # This project makes no assumption about the dataset's layout or labels.
+  root: null
+
+  # Extensions the audit may try to open with Pillow for dimension statistics.
+  # This is not a claim about the dataset format: every file extension is
+  # counted, and unsupported formats are simply not opened.
+  image_extensions:
+    - .png
+    - .jpg
+    - .jpeg
+    - .tif
+    - .tiff
+    - .bmp
+    - .webp
+
+  # Number of image files sampled for dimension statistics. 0 inspects all.
+  dimension_sample_size: 500
