@@ -3,18 +3,27 @@
 Uncertainty-aware deep learning for planetary plume candidate detection under
 imaging variations.
 
-> **Research status: foundation only.**
+> **Research status: dataset gate passed with conditions; no model work yet.**
 >
-> - The dataset is **UNVERIFIED**. No candidate dataset, including any
->   previously suggested Zenodo dataset, has been inspected or accepted.
+> - Zenodo 2556063 has been verified as a **label-only** dataset for 308 real
+>   NASA images. It is accepted for a **narrow Io pilot**, not for the full
+>   research objective. See `docs/dataset_verification.md`.
+> - The documented plume-angle convention is implemented and tested, but a
+>   residual LPSC Figure 1 inconsistency remains; sector labels are not yet
+>   usable for publication-grade claims or training.
 > - The model architecture is **UNDECIDED**.
-> - No model has been trained, no experiment has been run, and no results exist.
+> - No model has been trained and no results exist.
+> - The independent candidate-annotation GUI is implemented, but **no human
+>   annotations have been produced or compared yet**. The reviewer must perform
+>   the independent review.
 > - No data, checkpoints, or credentials are bundled with this repository.
 
-This repository currently contains the project foundation: environment
-diagnostics, configuration loading, a format-agnostic dataset audit, and tests.
-It deliberately stops before model selection or training. The dataset audit must
-establish what task the data can legitimately support first.
+This repository contains the project foundation and the independent
+plume-candidate annotation workflow: environment diagnostics, configuration
+loading, a format-agnostic dataset audit, validated acquisition and angle
+conversion, and tests. It deliberately stops before model selection or training.
+The dataset audit must establish what task the data can legitimately support
+first.
 
 ## Purpose
 
@@ -39,7 +48,12 @@ The project does **not** assume:
 | YAML configuration validation | Complete |
 | Generic dataset inventory and dimension audit | Complete |
 | Automated tests for the foundation | Complete |
-| Dataset provenance, labels, and license verification | **Not started** |
+| Dataset provenance, labels, and license verification | Complete with conditions (Zenodo 2556063) |
+| Annotation manifest and Galileo sidecar parsing | Complete |
+| Io sample acquisition and image validation | Complete (12 images) |
+| Plume-angle convention validation | Documented conversion implemented; residual LPSC Figure 1 inconsistency |
+| Independent candidate annotation GUI | Complete (local PySide6; released labels hidden) |
+| Independent human review | **Not performed** (the reviewer must run it) |
 | Task formulation (classification / detection / segmentation) | **Undecided** |
 | Model architecture | **Undecided** |
 | Training and evaluation | **Not started** |
@@ -70,6 +84,7 @@ planetary-plume-ai/
 ├── README.md
 ├── requirements.txt
 ├── requirements-dev.txt
+├── requirements-gui.txt
 ├── pytest.ini
 ├── .gitignore
 ├── .env.example
@@ -78,24 +93,73 @@ planetary-plume-ai/
 ├── src/
 │   └── planetary_plume/
 │       ├── __init__.py
+│       ├── acquisition.py
+│       ├── angle_convention.py
+│       ├── angle_intervals.py
+│       ├── annotation_store.py
+│       ├── annotations.py
 │       ├── config.py
+│       ├── convention.py
 │       ├── dataset_audit.py
-│       └── environment.py
+│       ├── display.py
+│       ├── environment.py
+│       ├── image_readers.py
+│       ├── manifest.py
+│       ├── pds.py
+│       ├── qt_canvas.py
+│       ├── review_app.py
+│       ├── review_compare.py
+│       ├── review_manifest.py
+│       ├── review_manifest_builder.py
+│       ├── validation.py
+│       └── viewport.py
 ├── scripts/
+│   ├── acquire_annotations.py
+│   ├── acquire_images.py
+│   ├── annotate_candidates.py
+│   ├── audit_dataset.py
+│   ├── build_manifest.py
+│   ├── build_review_manifest.py
 │   ├── check_environment.py
-│   └── audit_dataset.py
+│   ├── compare_annotations.py
+│   ├── diagnose_angle_convention.py
+│   └── validate_dataset.py
 ├── notebooks/
+├── annotations/
+│   └── independent/          # independent JSON, sanitized manifest, label map
 ├── data/
 │   └── .gitkeep
 ├── outputs/
 │   └── .gitkeep
 ├── tests/
 │   ├── __init__.py
+│   ├── conftest.py
+│   ├── test_acquisition.py
+│   ├── test_angle_convention.py
+│   ├── test_angle_intervals.py
+│   ├── test_annotation_store.py
+│   ├── test_annotations.py
+│   ├── test_convention.py
 │   ├── test_dataset_audit.py
-│   └── test_environment.py
+│   ├── test_environment.py
+│   ├── test_image_readers.py
+│   ├── test_manifest.py
+│   ├── test_pds_mapping.py
+│   ├── test_qt_canvas.py
+│   ├── test_review_app_independence.py
+│   ├── test_review_compare.py
+│   ├── test_review_manifest.py
+│   ├── test_review_manifest_builder.py
+│   ├── test_scripts_smoke.py
+│   ├── test_validation.py
+│   └── test_viewport_display.py
 └── docs/
-    ├── research_plan.md
-    └── experiment_log.md
+    ├── angle_convention_investigation.md
+    ├── dataset_validation.md
+    ├── dataset_verification.md
+    ├── experiment_log.md
+    ├── independent_annotation.md
+    └── research_plan.md
 ```
 
 `dataset_audit.py` and `requirements-dev.txt` are small additions to the
@@ -115,6 +179,13 @@ Core dependencies are intentionally minimal: PyYAML, NumPy, and Pillow. PyTorch
 is **not** installed by `requirements.txt`. It is a large dependency and is not
 needed for the foundation; install it when the dataset gate has passed and model
 work begins. See [Optional: PyTorch](#optional-pytorch).
+
+The desktop annotation GUI uses PySide6. It is optional for the core analysis and
+test suite and is installed from a separate file:
+
+```powershell
+python -m pip install -r requirements-gui.txt
+```
 
 ## Local setup on Windows
 
@@ -224,9 +295,81 @@ What the audit **does not** do:
 - verify provenance, licensing, annotation quality, or class balance;
 - decide whether the dataset is suitable for the research question.
 
-FITS files are counted as files but are not opened, because the project has not
-verified that a FITS reader is needed. Add one only after the dataset format is
-confirmed.
+FITS files are counted as files but are not opened by the generic audit. The
+dataset-validation pipeline has a limited FITS reader for the verified LORRI
+products only.
+
+## Zenodo 2556063 acquisition and Io validation
+
+The dataset is a **label bundle**, not an image archive. The pipeline downloads
+the 152 KB annotations, builds a manifest, resolves a small stratified Io
+sample, downloads images from PDS, and renders overlays for manual inspection.
+All data and generated artifacts stay in `data/` and `outputs/` (ignored by Git).
+
+```powershell
+python scripts/acquire_annotations.py --delay 0
+python scripts/build_manifest.py
+python scripts/acquire_images.py --per-stratum 3 --delay 0.5 --dry-run
+python scripts/acquire_images.py --per-stratum 3 --delay 0.5
+python scripts/validate_dataset.py --output-dir outputs\angle_investigation\convention_v1 --overlay-review outputs\validation\io_sample\overlay_review.json --overlay-status "CONVENTION V1 - 0 up clockwise from fitted center; LPSC Fig 1 caveat"
+python scripts/diagnose_angle_convention.py
+```
+
+Key rules enforced by the pipeline:
+
+- annotations are parsed read-only and hashed;
+- Galileo and LORRI identifiers use separate resolvers;
+- ambiguous or missing PDS mappings are reported, never silently substituted;
+- downloads use `.part` files with HTTP Range resume and never overwrite a
+  final file by default;
+- overlays carry the documented angle convention and an explicit status banner.
+
+**Current status:** the documented angle convention (`0 = up`, clockwise, from
+the fitted limb center) is implemented and tested in
+`src/planetary_plume/angle_convention.py`; see
+`docs/angle_convention_investigation.md`. A residual inconsistency remains: the
+LPSC 2019 Figure 1 appears to place one light-blue sector where the released
+intervals do not. Limb circles align on the 12-image Io sample, but plume-sector
+alignment remains visually ambiguous on the six positives. Use the conversion
+for exploratory pipeline work only; do not train a model or make
+publication-grade sector claims until the residual is resolved.
+
+## Independent candidate annotation (labels hidden)
+
+A local PySide6 application lets the reviewer inspect the 12-image Io pilot and
+record candidate directions or angular intervals **before** seeing the released
+plume-sector labels. It is a human annotation tool, not a detector.
+
+```powershell
+# once: build the sanitized review manifest from the validated acquisition log
+python scripts\build_review_manifest.py
+
+# launch the application
+python scripts\annotate_candidates.py
+```
+
+The GUI reads only `annotations/independent/review_manifest.json`, which contains
+image identity, dimensions, product paths, and fitted limb geometry. It does not
+read released plume intervals or positive/negative labels, does not prepopulate
+candidate locations, and has no comparison feature. Released annotations remain
+untouched in `data/raw/zenodo_2556063/annotations/`.
+
+Independent annotations are saved as versioned JSON under
+`annotations/independent/`. After saving the reviews, run the separate comparison
+stage explicitly:
+
+```powershell
+python scripts\compare_annotations.py
+```
+
+The comparison matches by verified `image_id` (never filename guesses), handles
+intervals crossing 0°/360°, reports agreement/disagreement/inconclusive and
+missing/ambiguous mappings, writes timestamped non-overwriting reports under
+`outputs/comparisons/`, and states that agreement does not prove a feature is a
+physical plume.
+
+Full protocol, storage schema, comparison statuses, and limitations:
+`docs/independent_annotation.md`.
 
 ## Configuration
 
@@ -282,6 +425,9 @@ authentication or automatic uploads.
 ## Data and output policy
 
 - `data/` and `outputs/` are ignored by Git except for their `.gitkeep` files.
+- Independent annotation JSON, the sanitized review manifest, and the
+  comparison-only label map under `annotations/independent/` are ignored by Git
+  by default; the directory README and `.gitkeep` are tracked.
 - Model checkpoints and common serialized model formats are ignored.
 - `.env` files are ignored; `.env.example` is tracked.
 - Generated audit JSON belongs in `outputs/`, which is not committed.
@@ -314,6 +460,8 @@ experimental direction.
   experiments, and open questions.
 - `docs/experiment_log.md` — template for experiment IDs, configurations,
   dataset versions, seeds, metrics, and observations.
+- `docs/independent_annotation.md` — independent-review protocol, GUI usage,
+  annotation JSON schema, comparison statuses, and manual-annotation limitations.
 
 No citations or research results are asserted in this initial scaffold; the
 literature review is pending.

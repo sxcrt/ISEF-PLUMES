@@ -3,8 +3,10 @@
 **Project:** Uncertainty-Aware Deep Learning for Planetary Plume Detection Under
 Imaging Variations
 
-**Status:** Foundation phase. The dataset is **UNVERIFIED**; the model
-architecture is **UNDECIDED**. No experiments have been run.
+**Status:** Dataset gate **passed with conditions** for a narrow Io pilot
+(Zenodo 2556063). The model architecture is **UNDECIDED**; no model experiments
+have been run. The documented plume-angle conversion is implemented; a residual
+LPSC Figure 1 inconsistency remains unresolved for publication-grade claims.
 
 **Last updated:** 2026-10-20
 
@@ -69,10 +71,10 @@ Every file or sample must be assigned to one category, with evidence recorded.
 
 | Category | Definition | Current status |
 | --- | --- | --- |
-| **Observed plume candidates** | Real spacecraft observations asserted to contain a plume or plume candidate, with provenance and processing level recorded. | Not acquired or verified. |
-| **Observed negatives** | Real observations from a comparable instrument and conditions, asserted not to contain a plume candidate. The negative definition must be explicit. | Not acquired or verified. |
-| **Confounders** | Limb haze, clouds, background stars, cosmic rays, detector artifacts, compression artifacts, or other features that can mimic a plume. These may overlap with negatives but are not automatically labels. | Not characterized. |
-| **Synthetic / simulated** | Rendered, modeled, or otherwise generated images. Must be labeled as synthetic at the file and experiment level. | None generated. |
+| **Observed plume candidates** | Real spacecraft observations asserted to contain a plume or plume candidate, with provenance and processing level recorded. | Partially verified: 112 annotated positives, Enceladus/Io only; documented angle convention, LPSC figure residual. |
+| **Observed negatives** | Real observations from a comparable instrument and conditions, asserted not to contain a plume candidate. The negative definition must be explicit. | Partially verified: 196 annotation negatives; not verified physical absences. |
+| **Confounders** | Limb haze, clouds, background stars, cosmic rays, detector artifacts, compression artifacts, or other features that can mimic a plume. These may overlap with negatives but are not automatically labels. | Not characterized or labelled. |
+| **Synthetic / simulated** | Rendered, modeled, or otherwise generated images. Must be labeled as synthetic at the file and experiment level. | None indicated in the verified bundle. |
 
 ### Separation policy
 
@@ -89,28 +91,31 @@ Every file or sample must be assigned to one category, with evidence recorded.
 
 ## 5. Dataset verification gate
 
-A previously suggested Zenodo dataset is **UNVERIFIED**. No DOI, title, license,
-annotation description, or file inventory is treated as established here. The
-dataset may turn out to be unsuitable, partially suitable, or suitable only for a
-narrower task.
+Zenodo 2556063 has been verified as a **label-only** dataset for 308 real NASA
+images. It is accepted only for a **narrow Io pilot**; it is not accepted as the
+sole dataset for the full research objective. The verification evidence and
+unresolved questions are in `docs/dataset_verification.md`; the sample validation
+is in `docs/dataset_validation.md`.
 
-The audit script answers only the file-inventory portion of this gate.
+The generic audit script answers only the file-inventory portion of this gate.
+The dedicated manifest/acquisition/validation pipeline is the stronger evidence
+for this dataset.
 
 ### 5.1 Required evidence
 
 | Check | Evidence required | Status |
 | --- | --- | --- |
-| Identity and provenance | Producer, mission/instrument, processing level, publication/DOI, contact, retrieval date | **UNVERIFIED** |
-| License and terms | License text, redistribution permission, citation requirements | **UNVERIFIED** |
-| File inventory | Audit output with counts, extensions, sizes, dimensions, unreadable files | **NOT RUN** |
-| Annotation definition | What a positive means; who labeled it; image-level vs pixel-level; label files and schema | **UNVERIFIED** |
-| Observation metadata | Target, time, filter, exposure, geometry, calibration state where available | **UNVERIFIED** |
-| Synthetic composition | Whether any files are simulated, and how they are identified | **UNVERIFIED** |
-| Negatives and confounders | How negatives were selected; which confounders are present or labeled | **UNVERIFIED** |
-| Duplicates and leakage | Exact/near duplicates, frame sequences, overlapping crops, source-level groups | **UNVERIFIED** |
-| Class balance and coverage | Counts by class, target, instrument, and acquisition condition | **UNVERIFIED** |
-| Redistribution | Whether data may be shared or must stay local/cloud-only | **UNVERIFIED** |
-| Compute footprint | Total size and feasibility on CPU and free cloud GPUs | **UNVERIFIED** |
+| Identity and provenance | Producer, mission/instrument, processing level, publication/DOI, contact, retrieval date | **Verified** (JPL/Zenodo; NASA PDS products; 12 Io products sampled) |
+| License and terms | License text, redistribution permission, citation requirements | **Verified** (annotations CC BY-SA 4.0; images separate NASA/PDS terms) |
+| File inventory | Audit output with counts, extensions, sizes, dimensions, unreadable files | **Verified** (308 YAML + 2 TXT; no images) |
+| Annotation definition | What a positive means; who labeled it; image-level vs pixel-level; label files and schema | **Partial** (limb points + angular intervals; documented 0-up origin; LPSC figure residual; no masks) |
+| Observation metadata | Target, time, filter, exposure, geometry, calibration state where available | **Not in dataset**; must be joined from PDS |
+| Synthetic composition | Whether any files are simulated, and how they are identified | **Verified none indicated** in sampled products |
+| Negatives and confounders | How negatives were selected; which confounders are present or labeled | **Partial/fail** (196 annotation negatives; selection undocumented; no confounder labels) |
+| Duplicates and leakage | Exact/near duplicates, frame sequences, overlapping crops, source-level groups | **Partial** (no exact duplicate labels; sequences not reconstructed) |
+| Class balance and coverage | Counts by class, target, instrument, and acquisition condition | **Verified** (112 pos/196 neg; only Io has both classes) |
+| Redistribution | Whether data may be shared or must stay local/cloud-only | **Verified with conditions** (CC BY-SA annotations; NASA/PDS images separate) |
+| Compute footprint | Total size and feasibility on CPU and free cloud GPUs | **Partial** (~1 GB estimated; 12-image sample 68 MB) |
 
 ### 5.2 Gate procedure
 
@@ -126,6 +131,11 @@ The audit script answers only the file-inventory portion of this gate.
    separable and identifiable.
 7. Write a dataset audit entry in `docs/experiment_log.md`.
 8. Decide the task granularity that the labels legitimately support.
+
+**Recorded outcome:** PASS WITH CONDITIONS for a narrow Io pilot; the full
+research objective is not yet supported. The documented angle conversion is
+implemented; the residual LPSC Figure 1 inconsistency is the remaining
+publication-grade blocker.
 
 ### 5.3 Gate outcomes
 

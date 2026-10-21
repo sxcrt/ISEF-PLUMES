@@ -40,6 +40,12 @@ data/*
 outputs/*
 !outputs/.gitkeep
 
+# Independent human annotations and generated review manifests (local data)
+# Keep the directory README and .gitkeep tracked.
+annotations/independent/*.json
+annotations/independent/*.json.bak
+annotations/independent/*.bak
+
 # Models and checkpoints
 models/
 checkpoints/
@@ -56,6 +62,8 @@ checkpoints/
 *.tar
 *.tar.gz
 *.7z
+*.part
+*.corrupt
 
 # Editor and OS files
 .vscode/
